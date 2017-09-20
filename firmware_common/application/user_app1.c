@@ -148,74 +148,59 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-   u8 au8Message[] = "STATE 1"; 
-   u8 au8Message1[] = "STATE 2";
-   u8 au8Data[]="Entering state 1";
-   u8 au8Data1[]="Entering state 2";
-   static u8 au8DebugSanf[1];
-   static u16 u16Counter = 0;
-   static bool  bBstate=FALSE;
-   
-   u16Counter++;
-   DebugScanf(au8DebugSanf);
-   
-   if( WasButtonPressed(BUTTON1)||au8DebugSanf[0] =='1')
-    {
-      ButtonAcknowledge(BUTTON1);
-      bBstate=FALSE;
-      LCDCommand(LCD_CLEAR_CMD);
-      LCDMessage(LINE1_START_ADDR, au8Message);
-      
-      //LCDClearChars(LINE1_START_ADDR + 7, 11);
-      DebugPrintf(au8Data);
-      DebugLineFeed();
-      
-      LedOn(WHITE);
-      LedOn(PURPLE);
-      LedOn(BLUE);
-      LedOn(CYAN);
-      LedOff(GREEN);
-      LedOff(YELLOW);
-      LedOff(ORANGE);
-      LedOff(RED);
-
-      LedOn(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOn(LCD_BLUE);
-      
-      PWMAudioOff(BUZZER1);
-      au8DebugSanf[0] =0;
-    }
-    
-    if( WasButtonPressed(BUTTON2)||au8DebugSanf[0] =='2')
-    { 
-      ButtonAcknowledge(BUTTON2);
-      bBstate=TRUE;
-      u16Counter=0;
-      PWMAudioOn(BUZZER1);
-      LCDCommand(LCD_CLEAR_CMD);
-      LCDMessage(LINE1_START_ADDR, au8Message1);
-      //LCDClearChars(LINE1_START_ADDR + 7, 11);
-      DebugPrintf(au8Data1);
-      DebugLineFeed();
-      
-      LedBlink(GREEN, LED_1HZ);
-      LedBlink(YELLOW, LED_2HZ);
-      LedBlink(ORANGE, LED_4HZ);
-      LedBlink(RED, LED_8HZ);
-      LedOff(WHITE);
-      LedOff(PURPLE);
-      LedOff(BLUE);
-      LedOff(CYAN);
-      
-      LedOn(LCD_RED);
-      LedPWM(LCD_GREEN,LED_PWM_20);
-      LedOff(LCD_BLUE);    
-      au8DebugSanf[0]=0;
-    }
-
+  static u8 u8Data=0;
+  static  u16 u16Counter=0;
+  static  bool bBstate=FALSE;
+  static u8 au8DebugScanf[1];
   
-    if(bBstate==TRUE)
+  u16Counter++;
+  if(DebugScanf(au8DebugScanf))
+    {
+      switch(au8DebugScanf[0])
+      {
+          case '1':
+            u8Data=1;
+            break;
+          case '2':
+            u8Data=2;
+          default:
+            break;
+      }
+    }
+  
+  if( WasButtonPressed(BUTTON1) )
+    {
+        ButtonAcknowledge(BUTTON1);
+        u8Data=1;
+    }
+  
+  if( WasButtonPressed(BUTTON2) )
+    {
+        ButtonAcknowledge(BUTTON2);
+        u8Data=2;
+    }
+  
+  switch(u8Data)
+    {
+      case 1:
+              bBstate=FALSE;
+              UserAPP1_state1();
+              PWMAudioOff(BUZZER1);
+              u8Data=0;
+              break;
+            
+      case 2:
+              bBstate=TRUE;
+              UserAPP1_state2();
+              u16Counter=0;
+              PWMAudioOn(BUZZER1);
+              u8Data=0;
+              break;
+       default:
+              break;
+    }
+   
+   if(bBstate==TRUE)
     {   
       if(u16Counter==100)
       {
@@ -227,6 +212,7 @@ static void UserApp1SM_Idle(void)
         PWMAudioOn(BUZZER1);
       }
     }
+  
 } /* end UserApp1SM_Idle() */
     
 
@@ -236,9 +222,56 @@ static void UserApp1SM_Error(void)
 {
   
 } /* end UserApp1SM_Error() */
+static void UserAPP1_state1(void)
+{
+    u8 au8Message[] = "STATE 1";
+  
+    //LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, au8Message);     
+    LCDClearChars(LINE1_START_ADDR + 7, 11);
+    DebugPrintf("Entering state 1");
+    DebugLineFeed();
+    
+    LedOn(WHITE);
+    LedOn(PURPLE);
+    LedOn(BLUE);
+    LedOn(CYAN);
+    LedOff(GREEN);
+    LedOff(YELLOW);
+    LedOff(ORANGE);
+    LedOff(RED);
 
+    LedOn(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOn(LCD_BLUE);
+    
+    PWMAudioOff(BUZZER1);
 
+}
 
+static void UserAPP1_state2(void)
+{
+    u8 au8Message1[] = "STATE 2";
+    
+    //LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, au8Message1);
+    LCDClearChars(LINE1_START_ADDR + 7, 11);
+    DebugPrintf("Entering state 2");
+    DebugLineFeed();
+    
+    LedBlink(GREEN, LED_1HZ);
+    LedBlink(YELLOW, LED_2HZ);
+    LedBlink(ORANGE, LED_4HZ);
+    LedBlink(RED, LED_8HZ);
+    LedOff(WHITE);
+    LedOff(PURPLE);
+    LedOff(BLUE);
+    LedOff(CYAN);
+    
+    LedOn(LCD_RED);
+    LedPWM(LCD_GREEN,LED_PWM_20);
+    LedOff(LCD_BLUE);    
+}
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */
 /*--------------------------------------------------------------------------------------------------------------------*/
